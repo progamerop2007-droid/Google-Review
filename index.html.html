@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Card</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Google Sans", Roboto, Arial, sans-serif;
+      background: #fff;
+      color: #202124;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .hidden { display: none !important; }
+
+    .wrap { width: 100%; max-width: 420px; }
+
+    /* ---------- Setup form ---------- */
+    .setup h1 { font-size: 24px; font-weight: 500; color: #000; margin-bottom: 6px; }
+    .setup .sub { font-size: 14px; color: #5f6368; margin-bottom: 24px; }
+
+    label { display: block; font-size: 14px; font-weight: 500; margin: 14px 0 6px; }
+    label .opt { color: #80868b; font-weight: 400; }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #202124;
+      background: #fff;
+    }
+    input:focus, select:focus { outline: none; border-color: #000; }
+    input::placeholder { color: #9aa0a6; }
+
+    .hint { font-size: 12px; color: #80868b; margin-top: 4px; }
+    .error { color: #d93025; font-size: 14px; margin-top: 12px; min-height: 18px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 28px;
+      border: 1px solid #dadce0;
+      background: #fff;
+      color: #000;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn:hover { background: #f8f9fa; }
+    .btn.primary { background: #000; color: #fff; border-color: #000; margin-top: 20px; }
+    .btn.primary:hover { background: #202124; }
+
+    .row { display: flex; gap: 10px; }
+    .row .btn { margin-top: 10px; }
+
+    /* ---------- Result ---------- */
+    .result h2 { font-size: 20px; font-weight: 500; color: #000; margin-bottom: 6px; }
+    .result .sub { font-size: 14px; color: #5f6368; margin-bottom: 18px; }
+    .preview-box {
+      border: 1px solid #dadce0;
+      border-radius: 16px;
+      padding: 28px 20px 20px;
+      margin-bottom: 8px;
+    }
+    .divider { border: none; border-top: 1px solid #dadce0; margin: 24px 0; }
+    .result h3 { font-size: 16px; font-weight: 500; color: #000; margin-bottom: 8px; }
+    .link-box {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #5f6368;
+      word-break: break-all;
+      max-height: 90px;
+      overflow: auto;
+    }
+    .qr-wrap { text-align: center; margin: 20px 0 8px; }
+    .qr-wrap img { width: 200px; height: 200px; image-rendering: pixelated; }
+    .note { font-size: 13px; color: #5f6368; line-height: 1.5; margin-top: 10px; }
+
+    /* ---------- Card (used in preview and receiver) ---------- */
+    .card { text-align: center; }
+    .logo {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #000; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 600; margin: 0 auto 20px;
+    }
+    .card h1 { font-size: 24px; font-weight: 500; color: #000; margin-bottom: 6px; }
+    .card .meta { font-size: 14px; color: #5f6368; margin-bottom: 28px; }
+
+    .links { display: flex; flex-direction: column; gap: 12px; }
+    .link-btn {
+      display: flex; align-items: center; gap: 14px;
+      width: 100%; padding: 16px 20px; border-radius: 28px;
+      border: 1px solid #dadce0; background: #fff; color: #000;
+      text-decoration: none; font-size: 16px; font-weight: 500;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .link-btn:hover, .link-btn:focus-visible {
+      background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.12); outline: none;
+    }
+    .link-btn.primary { background: #000; color: #fff; border-color: #000; }
+    .link-btn.primary:hover, .link-btn.primary:focus-visible { background: #202124; }
+    .link-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+    .link-btn .label { flex: 1; text-align: left; }
+    .link-btn .arrow { color: #5f6368; font-size: 20px; }
+    .link-btn.primary .arrow { color: #fff; }
+
+    .card footer { margin-top: 36px; font-size: 12px; color: #80868b; }
+  </style>
+</head>
+<body>
+
+<!-- ===================== SETUP + RESULT ===================== -->
+<div class="wrap setup" id="setupPage">
+  <h1>Set up your review card</h1>
+  <p class="sub">Fill in the details and tap Create. No account needed.</p>
+
+  <form id="form" autocomplete="off" novalidate>
+    <label for="fName">Business name</label>
+    <input id="fName" placeholder="e.g. Irani Cafe" maxlength="60">
+
+    <label for="fCity">City / area location</label>
+    <input id="fCity" placeholder="e.g. Kalyani Nagar, Pune" maxlength="60">
+
+    <label for="fCat">Business category</label>
+    <select id="fCat">
+      <option>Restaurant &amp; Cafe</option>
+      <option>Salon &amp; Spa</option>
+      <option>Clinic &amp; Health</option>
+      <option>Retail Shop</option>
+      <option>Gym &amp; Fitness</option>
+      <option>Other</option>
+    </select>
+
+    <label for="fGoogle">Google Maps link or review link</label>
+    <input id="fGoogle" placeholder="Paste your Google Maps link">
+    <div class="hint">Share → Copy link from Google Maps. The review link works too.</div>
+
+    <label for="fWa">WhatsApp number <span class="opt">(optional)</span></label>
+    <input id="fWa" type="tel" placeholder="e.g. 9876543210" maxlength="16">
+    <div class="hint">Just the number. A 10-digit Indian number gets +91 automatically.</div>
+
+    <label for="fIg">Instagram profile <span class="opt">(optional)</span></label>
+    <input id="fIg" placeholder="e.g. yourhandle or https://instagram.com/yourhandle">
+
+    <button type="submit" class="btn primary">Create card</button>
+    <div class="error" id="err"></div>
+  </form>
+
+  <div class="result hidden" id="result">
+    <h2>Card ready</h2>
+    <p class="sub">This is what your customers will see. Tap each button to test it.</p>
+
+    <div class="preview-box">
+      <div class="card" id="preview"></div>
+    </div>
+
+    <hr class="divider">
+
+    <h3>Write this link to the NTAG216 tag</h3>
+    <div class="link-box" id="linkBox"></div>
+    <div class="row">
+      <button class="btn" id="copyBtn" type="button">Copy link</button>
+      <a class="btn" id="openBtn" target="_blank" rel="noopener">Open</a>
+    </div>
+
+    <h3 style="margin-top:24px">QR code</h3>
+    <div class="qr-wrap"><img id="qrImg" alt="QR code for this card"></div>
+    <div class="row">
+      <a class="btn" id="qrDl" download="review-card-qr.png">Download QR</a>
+    </div>
+    <p class="note" id="qrNote"></p>
+
+    <div class="row">
+      <button class="btn" id="editBtn" type="button">Edit details</button>
+    </div>
+    <button class="btn primary" id="newBtn" type="button">Create another card</button>
+  </div>
+</div>
+
+<!-- ===================== RECEIVER PAGE (opened from the NFC tag / QR) ===================== -->
+<div class="wrap hidden" id="receiverPage">
+  <div class="card" id="receiverCard"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function () {
+  // ---------- Icons (fixed markup, never user input) ----------
+  var GOOGLE_SVG =
+    '<svg viewBox="0 0 48 48" aria-hidden="true">' +
+    '<path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
+    '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
+    '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>' +
+    '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>' +
+    '</svg>';
+
+  var WA_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path fill="#25D366" d="M12 0C5.37 0 0 5.37 0 12c0 2.12.55 4.11 1.52 5.84L0 24l6.32-1.66A11.94 11.94 0 0 0 12 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/>' +
+    '<path fill="#fff" d="M17.5 14.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.49-.9-.8-1.5-1.78-1.67-2.08-.18-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"/>' +
+    '</svg>';
+
+  var IG_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<defs><linearGradient id="igGrad" x1="0" y1="24" x2="24" y2="0" gradientUnits="userSpaceOnUse">' +
+    '<stop offset="0" stop-color="#FEDA75"/><stop offset="0.5" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/>' +
+    '</linearGradient></defs>' +
+    '<rect x="2" y="2" width="20" height="20" rx="5.5" fill="none" stroke="url(#igGrad)" stroke-width="2.2"/>' +
+    '<circle cx="12" cy="12" r="4.4" fill="none" stroke="url(#igGrad)" stroke-width="2.2"/>' +
+    '<circle cx="17.6" cy="6.4" r="1.4" fill="url(#igGrad)"/>' +
+    '</svg>';
+
+  // ---------- Encoding (card data lives inside the link, no storage) ----------
+  function toB64Url(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = "";
+    bytes.forEach(function (b) { bin += String.fromCharCode(b); });
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function fromB64Url(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    var bin = atob(s);
+    var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+    return new TextDecoder().decode(bytes);
+  }
+
+  // ---------- Input cleanup ----------
+  function googleLink(input) {
+    input = input.trim();
+    if (!input) return "";
+    if (/writereview/i.test(input) && /^https?:\/\//i.test(input)) return input;
+    var m = input.match(/ChIJ[0-9A-Za-z_-]+/);
+    if (m) return "https://search.google.com/local/writereview?placeid=" + m[0];
+    if (!/^https?:\/\//i.test(input) && /google\.|goo\.gl|maps\./i.test(input)) {
+      input = "https://" + input;
+    }
+    return /^https?:\/\//i.test(input) ? input : "";
+  }
+
+  function whatsappDigits(input) {
+    var digits = input.replace(/\D/g, "");
+    if (digits.length === 10) digits = "91" + digits;
+    return digits;
+  }
+
+  function instagramLink(input) {
+    input = input.trim();
+    if (!input) return "";
+    if (/^https?:\/\//i.test(input)) return input;
+    var handle = input.replace(/^@/, "").replace(/\/+$/, "");
+    return handle ? "https://www.instagram.com/" + handle : "";
+  }
+
+  // ---------- Card rendering (same markup for preview and receiver) ----------
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function linkButton(href, label, svg, primary) {
+    if (!/^https:\/\//i.test(href)) return null;
+    var a = el("a", "link-btn" + (primary ? " primary" : ""));
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.innerHTML = svg;
+    a.appendChild(el("span", "label", label));
+    a.appendChild(el("span", "arrow", "\u203A"));
+    return a;
+  }
+
+  function renderCard(cfg, container) {
+    container.innerHTML = "";
+    container.appendChild(el("div", "logo", (cfg.n || "?").charAt(0).toUpperCase()));
+    container.appendChild(el("h1", null, cfg.n || "Business"));
+    container.appendChild(el("p", "meta", cfg.c || ""));
+
+    var links = el("div", "links");
+    var g = cfg.g && linkButton(cfg.g, "Review us on Google", GOOGLE_SVG, true);
+    var w = cfg.w && linkButton("https://wa.me/" + cfg.w + "?text=" + encodeURIComponent("Hi, I visited your business."), "Chat on WhatsApp", WA_SVG);
+    var i = cfg.i && linkButton(cfg.i, "Follow us on Instagram", IG_SVG);
+    [g, w, i].forEach(function (b) { if (b) links.appendChild(b); });
+    container.appendChild(links);
+
+    container.appendChild(el("footer", null, "Thank you for visiting"));
+  }
+
+  // ---------- Routing ----------
+  var params = new URLSearchParams(location.search);
+  var encoded = params.get("c");
+
+  if (encoded) {
+    try {
+      var cfg = JSON.parse(fromB64Url(encoded));
+      showReceiver(cfg);
+    } catch (e) {
+      showSetup();
+      document.getElementById("err").textContent = "This card link is damaged. Please create the card again.";
+    }
+  } else {
+    showSetup();
+  }
+
+  function showReceiver(cfg) {
+    document.getElementById("setupPage").classList.add("hidden");
+    document.getElementById("receiverPage").classList.remove("hidden");
+    document.title = (cfg.n || "Review") + " - Review";
+    renderCard(cfg, document.getElementById("receiverCard"));
+  }
+
+  function showSetup() {
+    document.getElementById("setupPage").classList.remove("hidden");
+    document.getElementById("receiverPage").classList.add("hidden");
+  }
+
+  // ---------- Setup form ----------
+  var form = document.getElementById("form");
+  var errBox = document.getElementById("err");
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    errBox.textContent = "";
+
+    var name = document.getElementById("fName").value.trim();
+    var city = document.getElementById("fCity").value.trim();
+    var cat = document.getElementById("fCat").value;
+    var google = googleLink(document.getElementById("fGoogle").value);
+    var wa = whatsappDigits(document.getElementById("fWa").value);
+    var ig = instagramLink(document.getElementById("fIg").value);
+
+    if (!name) { errBox.textContent = "Please enter the business name."; return; }
+    if (!city) { errBox.textContent = "Please enter the city or area."; return; }
+    if (!google) { errBox.textContent = "Please paste a valid Google Maps or review link (starting with https://)."; return; }
+
+    var cfg = {
+      n: name,
+      c: city + (cat && cat !== "Other" ? " · " + cat : ""),
+      g: google,
+      w: wa,
+      i: ig
+    };
+    Object.keys(cfg).forEach(function (k) { if (!cfg[k]) delete cfg[k]; });
+
+    showResult(cfg);
+  });
+
+  function showResult(cfg) {
+    var url = location.origin + location.pathname + "?c=" + toB64Url(JSON.stringify(cfg));
+
+    // 1. Show the three-button card right away
+    renderCard(cfg, document.getElementById("preview"));
+
+    // 2. Share link, open button, QR
+    document.getElementById("linkBox").textContent = url;
+    document.getElementById("openBtn").href = url;
+
+    var note = document.getElementById("qrNote");
+    note.textContent = url.length > 800
+      ? "Warning: this link is long. If NFC writing fails, try a shorter Google Maps link."
+      : "Tip: test the card by tapping the buttons above, then write the tag.";
+
+    if (typeof qrcode === "function") {
+      var qr = qrcode(0, "M");
+      qr.addData(url);
+      qr.make();
+      var dataUrl = qr.createDataURL(6, 4);
+      document.getElementById("qrImg").src = dataUrl;
+      document.getElementById("qrDl").href = dataUrl;
+    } else {
+      note.textContent = "QR library could not load. The link still works with NFC Tools.";
+    }
+
+    form.classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+
+  // ---------- Result buttons ----------
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var text = document.getElementById("linkBox").textContent;
+    var btn = this;
+    function done() {
+      btn.textContent = "Copied!";
+      setTimeout(function () { btn.textContent = "Copy link"; }, 1500);
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      done();
+    }
+  });
+
+  document.getElementById("editBtn").addEventListener("click", function () {
+    document.getElementById("result").classList.add("hidden");
+    form.classList.remove("hidden");
+  });
+
+  document.getElementById("newBtn").addEventListener("click", function () {
+    form.reset();
+    errBox.textContent = "";
+    document.getElementById("result").classList.add("hidden");
+    form.classList.remove("hidden");
+  });
+})();
+</script>
+
+</body>
+</html>
